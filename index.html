@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老面猫头(=¯ω¯=)API密钥仓</title>
+    <style>
+        @import url('https://fonts.font.im/css?family=Noto+Sans+SC:300,400');
+* {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 300;
+}
+.stat-item .num {
+  font-weight: 400;
+}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        body { background-color: #f8f8f8; color: #222; padding: 32px 16px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 {
+            font-size: 22px; font-weight: 500; color: #111;
+            margin-bottom: 24px; border-bottom: 1px solid #ddd; padding-bottom: 12px;
+        }
+        .stat-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px; margin-bottom: 24px;
+        }
+        .stat-item { border:1px solid #ddd; padding:16px; background:#fff; }
+        .stat-item .num { font-size:24px; font-weight:500; margin-bottom:4px; }
+        .stat-item .label { font-size:12px; color:#666; }
+        .top-actions { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+        .filter-group {
+            display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px;
+            padding-bottom:16px; border-bottom:1px solid #ddd;
+        }
+        .add-trigger-wrap { margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+        .btn-add-main {
+            padding:10px 18px; border:1px solid #222; background:#222;
+            color:#fff; cursor:pointer; font-size:14px;
+        }
+        .btn-add-main:hover { background:#444; }
+        /* 一键清空 低存在感样式 无框 */
+        .btn-clear-all {
+            background:transparent;
+            border:none;
+            color:#888;
+            font-size:14px;
+            cursor:pointer;
+            margin-left:auto;
+        }
+        .btn-clear-all:hover {
+            color:#dc3545;
+            text-decoration:underline;
+        }
+        .modal-mask {
+            position:fixed; inset:0; background:rgba(0,0,0,0.12);
+            display:none; align-items:center; justify-content:center; z-index:99;
+        }
+        .modal-mask.show { display:flex; }
+        .add-card {
+            border:1px solid #ccc; padding:20px; background:#fff;
+            width:min(90%,720px); max-height:90vh; overflow:auto;
+        }
+        .add-card h2 { font-size:16px; font-weight:500; margin-bottom:16px; }
+        .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+        .row-full { grid-column: 1 / -1; }
+        input, select {
+            width:100%; border:1px solid #ddd; padding:12px 14px;
+            font-size:14px; background:#fff; outline:none;
+        }
+        input:focus, select:focus { border-color:#222; }
+        .icon-btn {
+            width:40px; height:40px; border:1px solid #ccc; background:#fff;
+            cursor:pointer; display:grid; place-items:center;
+            transition: 0.2s ease; flex-shrink:0;
+        }
+        .icon-btn svg {
+            width:18px; height:18px; stroke-width:1.6;
+            display:block; margin:auto;
+        }
+        .btn-fill { background:#222; color:#fff; border-color:#222; }
+        .btn-fill:hover { background:#444; }
+        .btn-soft { color:#333; }
+        .btn-soft:hover { border-color:#222; }
+        .filter-btn {
+            padding:8px 14px; border:1px solid #ddd; background:#fff;
+            font-size:14px; cursor:pointer;
+        }
+        .filter-btn.active { background:#222; color:#fff; border-color:#222; }
+        .search-box { margin-bottom:20px; }
+        .list-wrap { border:1px solid #ddd; background:#fff; }
+        .api-card { border-bottom:1px solid #eee; }
+        .api-card:last-child { border-bottom:none; }
+        .card-head {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:16px 18px; cursor:pointer; user-select:none;
+        }
+        .card-head:hover { background:#fafafa; }
+        .head-left { display:flex; align-items:center; gap:10px; }
+        .arrow { width:16px; height:16px; stroke:#888; transition:transform 0.2s; }
+        .api-card.open .arrow { transform:rotate(90deg); }
+        .api-card h3 { font-size:16px; font-weight:500; color:#1A1A1A; }
+        .tag { font-size:12px; padding:3px 8px; border:1px solid #ccc; }
+        .tag-sign { color:#222; }
+        .tag-no { color:#555; }
+        .card-body { display:none; padding: 12px 18px 16px 18px; }
+        .api-card.open .card-body { display:block; }
+        .api-card p {
+            font-size:14px; color:#444; word-break:break-all;
+            margin-bottom:8px; line-height:1.5;
+        }
+        .btn-group { margin-top:14px; display:flex; gap:6px; flex-wrap:wrap; }
+        .tip { color:#777; text-align:center; padding:40px 0; }
+        .toast {
+            position:fixed; bottom:40px; left:50%; transform:translateX(-50%);
+            background:#222; color:#fff; padding:10px 20px; font-size:13px;
+            opacity:0; transition:0.3s; pointer-events:none;
+        }
+        .toast.show { opacity:1; }
+        .modal-footer { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+        .modal-close { padding:8px 14px; border:1px solid #ccc; background:#fff; cursor:pointer; }
+    @media (max-width:600px) {
+    .row { grid-template-columns:1fr; }
+    .stat-row { grid-template-columns:repeat(3, 1fr); gap:6px; }
+    .stat-item { padding:10px 8px; }
+    .stat-item .num { font-size:16px; }
+    .stat-item .label { font-size:10px; }
+    .btn-clear-all { font-size:12px; }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>老面猫头(=¯ω¯=)API密钥仓</h1>
+        <div class="stat-row">
+            <div class="stat-item"><div class="num" id="totalCount">0</div><div class="label">全部密钥</div></div>
+            <div class="stat-item"><div class="num" id="signCount">0</div><div class="label">可签到</div></div>
+            <div class="stat-item"><div class="num" id="signedToday">0</div><div class="label">今日已签到</div></div>
+        </div>
+        <div class="top-actions">
+            <button class="filter-btn" onclick="exportData()">导出备份</button>
+            <button class="filter-btn" onclick="importData()">导入恢复</button>
+            <input type="file" id="fileInput" style="display:none" accept=".json" onchange="handleImport(event)">
+        </div>
+        <div class="filter-group">
+            <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">全部</button>
+            <button class="filter-btn" data-filter="sign" onclick="setFilter('sign', this)">仅可签到</button>
+            <button class="filter-btn" data-filter="nosign" onclick="setFilter('nosign', this)">仅不可签到</button>
+        </div>
+        <!-- 修改这一行，增加容器，一键清空自动靠右 -->
+        <div class="add-trigger-wrap">
+            <button class="btn-add-main" onclick="openAddModal()">+ 新增密钥</button>
+            <button class="btn-clear-all" id="clearAllBtn">一键清空密钥记录</button>
+        </div>
+        <div class="search-box">
+            <input type="text" id="search" placeholder="搜索名称 / 网址 / URL / 密钥 / 备注" oninput="renderList()">
+        </div>
+        <div class="list-wrap" id="list"></div>
+    </div>
+    <div class="modal-mask" id="addModal">
+        <div class="add-card">
+            <h2 id="modalTitle">新增密钥</h2>
+            <div class="row">
+                <input type="text" id="name" placeholder="站点 / 项目名称">
+                <select id="type">
+                    <option value="sign">可签到站点</option>
+                    <option value="nosign">不可签到站点</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="text" id="siteUrl" placeholder="站点网址（点击跳转用）">
+                <input type="text" id="apiUrl" placeholder="API URL（复制用）">
+            </div>
+            <div class="row">
+                <input type="text" id="key" placeholder="API 密钥 / Token">
+                <input type="text" id="remark" placeholder="备注（可选）">
+            </div>
+            <div class="modal-footer">
+                <button class="modal-close" onclick="closeAddModal()">取消</button>
+                <button class="icon-btn btn-fill" onclick="saveItem()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast">复制成功</div>
+    <script>
+        let currentFilter = "all";
+        let editingIndex = -1;
+        const todayKey = new Date().toLocaleDateString();
+        function getList() {
+            const data = localStorage.getItem("apiList");
+            return data ? JSON.parse(data) : [];
+        }
+        function saveList(arr) { localStorage.setItem("apiList", JSON.stringify(arr)); }
+        function migrate(item) {
+            if (item.siteUrl === undefined) item.siteUrl = item.url || "";
+            if (item.apiUrl === undefined) item.apiUrl = item.url || "";
+            return item;
+        }
+        function openAddModal() {
+            editingIndex = -1;
+            document.getElementById("modalTitle").innerText = "新增密钥";
+            clearForm();
+            document.getElementById("addModal").classList.add("show");
+        }
+        function closeAddModal() {
+            document.getElementById("addModal").classList.remove("show");
+        }
+        function updateStats() {
+            const list = getList().map(migrate);
+            const signList = list.filter(i => i.type === "sign");
+            const signed = signList.filter(i => i.signDate === todayKey).length;
+            document.getElementById("totalCount").innerText = list.length;
+            document.getElementById("signCount").innerText = signList.length;
+            document.getElementById("signedToday").innerText = signed;
+        }
+        function setFilter(type, btnEl) {
+            currentFilter = type;
+            document.querySelectorAll(".filter-group .filter-btn").forEach(b => b.classList.remove("active"));
+            btnEl.classList.add("active");
+            renderList();
+        }
+        function saveItem() {
+            const name = document.getElementById("name").value.trim();
+            const type = document.getElementById("type").value;
+            const siteUrl = document.getElementById("siteUrl").value.trim();
+            const apiUrl = document.getElementById("apiUrl").value.trim();
+            const key = document.getElementById("key").value.trim();
+            const remark = document.getElementById("remark").value.trim();
+            if (!name) return alert("请填写项目名称");
+            const list = getList().map(migrate);
+            if (editingIndex >= 0 && editingIndex < list.length) {
+                list[editingIndex] = { ...list[editingIndex], name, type, siteUrl, apiUrl, key, remark };
+                showToast("已保存修改");
+            } else {
+                list.unshift({ name, type, siteUrl, apiUrl, key, remark, signDate: "" });
+                showToast("已新增");
+            }
+            saveList(list);
+            closeAddModal();
+            renderList();
+        }
+        function clearForm() {
+            ["name","siteUrl","apiUrl","key","remark"].forEach(id => document.getElementById(id).value = "");
+        }
+        function editItem(idx) {
+            const list = getList().map(migrate);
+            const item = list[idx];
+            if (!item) return;
+            editingIndex = idx;
+            document.getElementById("modalTitle").innerText = "编辑密钥";
+            document.getElementById("name").value = item.name;
+            document.getElementById("type").value = item.type;
+            document.getElementById("siteUrl").value = item.siteUrl || "";
+            document.getElementById("apiUrl").value = item.apiUrl || "";
+            document.getElementById("key").value = item.key || "";
+            document.getElementById("remark").value = item.remark || "";
+            document.getElementById("addModal").classList.add("show");
+        }
+        function toggleSign(idx) {
+            const list = getList().map(migrate);
+            const item = list[idx];
+            if (!item) return;
+            if (item.type !== "sign") { showToast("该站点不可签到"); return; }
+            item.signDate = (item.signDate === todayKey) ? "" : todayKey;
+            showToast(item.signDate ? "标记今日已签到" : "取消今日签到标记");
+            saveList(list);
+            renderList();
+        }
+        function toggleCard(el) { el.closest(".api-card").classList.toggle("open"); }
+        function renderList() {
+            // 关键修复：全量列表只 map 一次，后面所有 filter / indexOf 都基于它
+            const allList = getList().map(migrate);
+            updateStats();
+            let list = allList.slice();
+            if (currentFilter === "sign") list = list.filter(i => i.type === "sign");
+            if (currentFilter === "nosign") list = list.filter(i => i.type === "nosign");
+            const keyword = document.getElementById("search").value.toLowerCase();
+            const filtered = list.filter(item =>
+                item.name.toLowerCase().includes(keyword) ||
+                (item.siteUrl||"").toLowerCase().includes(keyword) ||
+                (item.apiUrl||"").toLowerCase().includes(keyword) ||
+                (item.key||"").toLowerCase().includes(keyword) ||
+                (item.remark||"").toLowerCase().includes(keyword)
+            );
+            const wrap = document.getElementById("list");
+            if (filtered.length === 0) {
+                wrap.innerHTML = '<div class="tip">暂无数据</div>';
+                return;
+            }
+            let html = "";
+            filtered.forEach(item => {
+                const idx = allList.indexOf(item);  // 现在能拿到真实索引
+                const tagText = item.type === "sign" ? "可签到" : "不可签到";
+                const tagClass = item.type === "sign" ? "tag-sign" : "tag-no";
+                const isSignedToday = item.signDate === todayKey;
+                html += `
+                <div class="api-card">
+                    <div class="card-head" onclick="toggleCard(this)">
+                        <div class="head-left">
+                            <svg class="arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                            <h3>${item.name}</h3>
+                        </div>
+                        <span class="tag ${tagClass}">${tagText}</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>站点网址：</strong>${item.siteUrl || "无"}</p>
+                        <p><strong>API URL：</strong>${item.apiUrl || "无"}</p>
+                        <p><strong>密钥：</strong>${item.key || "无"}</p>
+                        <p><strong>备注：</strong>${item.remark || "无"}</p>
+                        <div class="btn-group">
+                            ${item.type === "sign" ? `
+                            <button class="icon-btn ${isSignedToday ? 'btn-fill' : 'btn-soft'}" onclick="event.stopPropagation();toggleSign(${idx})" title="签到">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </button>` : ""}
+                            <button class="icon-btn btn-soft" onclick="event.stopPropagation();openSite('${(item.siteUrl||'').replace(/'/g,"\\'")}')" title="打开站点">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                </svg>
+                            </button>
+                            <button class="icon-btn btn-soft" onclick="event.stopPropagation();copyText('${(item.apiUrl||'').replace(/'/g,"\\'")}')" title="复制API URL">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-btn btn-soft" onclick="event.stopPropagation();copyText('${(item.key||'').replace(/'/g,"\\'")}')" title="复制密钥">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-btn btn-soft" onclick="event.stopPropagation();editItem(${idx})" title="编辑">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </button>
+                            <button class="icon-btn btn-soft" onclick="event.stopPropagation();delItem(${idx})" title="删除">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            wrap.innerHTML = html;
+        }
+        function openSite(url) {
+            if (!url) { showToast("没有站点网址"); return; }
+            window.open(url, "_blank");
+        }
+        function copyText(text) {
+            if (!text) return showToast("暂无内容可复制");
+            navigator.clipboard.writeText(text).then(() => showToast("复制成功"));
+        }
+        function delItem(index) {
+            const list = getList().map(migrate);
+            list.splice(index, 1);
+            saveList(list);
+            renderList();
+            showToast("已删除");
+        }
+        function showToast(text) {
+            const t = document.getElementById("toast");
+            t.innerText = text;
+            t.classList.add("show");
+            setTimeout(() => t.classList.remove("show"), 1600);
+        }
+        function exportData() {
+            const list = getList().map(migrate);
+            const blob = new Blob([JSON.stringify(list, null, 2)], { type: "application/json" });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "api_backup.json";
+            a.click();
+            showToast("备份文件已下载");
+        }
+        function importData() { document.getElementById("fileInput").click(); }
+        function handleImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                try {
+                    const arr = JSON.parse(ev.target.result).map(migrate);
+                    saveList(arr);
+                    renderList();
+                    showToast("导入成功");
+                } catch (err) { alert("文件格式错误"); }
+            }
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+        // ========== 新增：一键清空函数 ==========
+        document.getElementById('clearAllBtn').addEventListener('click', function(){
+            if(confirm('⚠确认清空全部密钥数据？操作不可恢复！\n强烈建议先导出JSON备份！')){
+                localStorage.removeItem("apiList");
+                renderList();
+                showToast("✅ 全部密钥记录已清空");
+            }
+        })
+        renderList();
+    </script>
+</body>
+</html>
